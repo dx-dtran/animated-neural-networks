@@ -27,9 +27,7 @@ def forward(data, weights, biases):
         b = biases[i]
         transform = layer_forward(transform, interpolations, w, b, np.tanh)
 
-    output = layer_forward(
-        transform, interpolations, weights[-1], biases[-1], np.tanh
-    )
+    output = layer_forward(transform, interpolations, weights[-1], biases[-1], np.tanh)
     return interpolations, output
 
 
@@ -106,6 +104,22 @@ def apply_transformations(data, weights, biases):
     return np.stack(interpolations, axis=1)
 
 
+def get_color(label):
+    if label < 0:
+        return "blue"
+    return "orange"
+
+
+def animate_scatter_points(iteration, points, scatters):
+    for i in range(points[0].shape[0]):
+        scatters[i]._offsets3d = (
+            points[iteration][i, 0:1],
+            points[iteration][i, 1:2],
+            points[iteration][i, 2:],
+        )
+    return scatters
+
+
 def main():
     data, labels = read_2d_data("xor_data.csv")
     # weights, biases = train(data, labels)
@@ -158,74 +172,47 @@ def main():
     ]
 
     point_transformations = apply_transformations(data, weights, biases)
-    print(point_transformations[0])
-    print(len(point_transformations[0]))
 
-    # fig = plt.figure()
-    # ax = p3.Axes3D(fig)
-    #
-    # # Initialize scatters
-    # scatters = [ ax.scatter(data[0][i,0:1], data[0][i,1:2], data[0][i,2:], c="blue") for i in range(data[0].shape[0]) ]
-    # print([(data[0][i,0:1], data[0][i,1:2], data[0][i,2:]) for i in range(data[0].shape[0])])
-    # print(len(data))
-    # print(data[0])
-    #
-    # # Number of iterations
-    # iterations = len(data)
-    #
-    # # Setting the axes properties
-    # ax.set_xlim3d([-50, 50])
-    # ax.set_xlabel('X')
-    #
-    # ax.set_ylim3d([-50, 50])
-    # ax.set_ylabel('Y')
-    #
-    # ax.set_zlim3d([-50, 50])
-    # ax.set_zlabel('Z')
-    #
-    # ax.set_title('3D Animated Scatter Example')
-    #
-    # # Provide starting angle for the view.
-    # ax.view_init(25, 10)
-    #
-    # # ani = animation.FuncAnimation(fig, animate_scatters, iterations, fargs=(data, scatters),
-    # #                                     interval=50, blit=False, repeat=True)
-    #
-    # plt.show()
+    fig = plt.figure()
+    ax = p3.Axes3D(fig)
+
+    ax.set_xlim3d([-6, 6])
+    ax.set_xlabel("X")
+
+    ax.set_ylim3d([-6, 6])
+    ax.set_ylabel("Y")
+
+    ax.set_zlim3d([-6, 6])
+    ax.set_zlabel("Z")
+
+    ax.set_title("3D Transformation")
+
+    scatter_points = [
+        ax.scatter(
+            point_transformations[0][i, 0:1],
+            point_transformations[0][i, 1:2],
+            point_transformations[0][i, 2:],
+            c=get_color(label),
+        )
+        for i, label in zip(range(point_transformations[0].shape[0]), labels)
+    ]
+
+    iterations = len(point_transformations)
+
+    ani = animation.FuncAnimation(
+        fig,
+        animate_scatter_points,
+        iterations,
+        fargs=(point_transformations, scatter_points),
+        interval=1,
+        blit=False,
+        repeat=True,
+    )
+
+    ani
+
+    plt.show()
 
 
 if __name__ == "__main__":
-    # p1 = np.array([1, 2, 3]).reshape((1, -1))
-    # p2 = np.array([7, 5, -2]).reshape((1, -1))
-    # p3 = np.array([2, 3, 1]).reshape((1, -1))
-    # p4 = np.array([4, 1, -5]).reshape((1, -1))
-    #
-    # p5 = np.array([1, 2, 3]).reshape((1, -1))
-    # p6 = np.array([7, 5, -2]).reshape((1, -1))
-    # p7 = np.array([2, 3, 1]).reshape((1, -1))
-    # p8 = np.array([4, 1, -5]).reshape((1, -1))
-    #
-    # x = interpolate(p1, p2, 10)
-    # y = interpolate(p3, p4, 10)
-    #
-    # r = interpolate(p5, p6, 10)
-    # t = interpolate(p7, p8, 10)
-    #
-    # l = []
-    # l.append(x)
-    # l.append(y)
-    # f = flatten_interpolations(l)
-    #
-    # z = []
-    # z.append(r)
-    # z.append(t)
-    # f2 = flatten_interpolations(z)
-    #
-    # # print(f)
-    # # print(f2)
-    #
-    # my_list = [f, f2]
-    # bla = np.stack(my_list, axis=1)
-    # print(bla)
-    # print(bla[0])
     main()
