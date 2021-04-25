@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import math
 
 from collections import namedtuple
 
@@ -13,6 +14,7 @@ def get_xor_data(num_samples: int, noise=0):
 
     padding = 0.3
     data = []
+    labels = []
     for i in range(num_samples):
         x = np.random.uniform(-5, 5)
         x += padding if x > 0 else -padding
@@ -25,9 +27,49 @@ def get_xor_data(num_samples: int, noise=0):
 
         label = get_xor_label(Point(x + noise_x, y + noise_y))
 
-        data.append([x, y, label])
+        data.append((x, y))
+        labels.append(label)
 
-    return data
+    return data, labels
+
+
+def get_circle_data(num_samples: int, noise=0):
+    data = []
+    labels = []
+    radius = 5
+
+    def get_circle_label(point: Point, center: Point):
+        return 1 if euclidian_distance(point, center) < (radius * 0.5) else -1
+
+    for i in range(num_samples // 2):
+        r = np.random.uniform(0, radius * 0.4)
+        angle = np.random.uniform(0, 2 * math.pi)
+        x = r * math.sin(angle)
+        y = r * math.cos(angle)
+        noise_x = np.random.uniform(-radius, radius) * noise
+        noise_y = np.random.uniform(-radius, radius) * noise
+        label = get_circle_label(Point(x + noise_x, y + noise_y), Point(0, 0))
+        data.append((x, y))
+        labels.append(label)
+
+    for i in range(num_samples // 2):
+        r = np.random.uniform(0, radius * 0.8)
+        angle = np.random.uniform(0, 2 * math.pi)
+        x = r * math.sin(angle)
+        y = r * math.cos(angle)
+        noise_x = np.random.uniform(-radius, radius) * noise
+        noise_y = np.random.uniform(-radius, radius) * noise
+        label = get_circle_label(Point(x + noise_x, y + noise_y), Point(0, 0))
+        data.append((x, y))
+        labels.append(label)
+
+    return data, labels
+
+
+def euclidian_distance(a: Point, b: Point):
+    dx = a.x - b.x
+    dy = a.y - b.y
+    return math.sqrt(dx * dx + dy * dy)
 
 
 def get_class_groups(points, labels):
