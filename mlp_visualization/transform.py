@@ -11,13 +11,22 @@ def relu(x):
     return x * (x > 0)
 
 
-def forward(data, weights, biases, activation_func):
+def apply_transformations_on_dataset(data, weights, intercepts, nonlinear_func):
+    transformations = []
+    vectorized_data = [np.array(point).reshape(1, -1) for point in data]
+    for vector in vectorized_data:
+        _, output = forward(vector, weights, intercepts, nonlinear_func)
+        transformations.append(output)
+    return transformations
+
+
+def forward(vector, weights, intercepts, nonlinear_func):
     interpolations = []
-    transform = data
+    transform = vector
     for i, _ in enumerate(weights[:-1]):
         w = weights[i]
-        b = biases[i]
-        transform = layer_forward(transform, interpolations, w, b, activation_func)
+        b = intercepts[i]
+        transform = layer_forward(transform, interpolations, w, b, nonlinear_func)
 
     # output = layer_forward(
     #     transform, interpolations, weights[-1], biases[-1], logistic.cdf
@@ -29,18 +38,18 @@ def forward(data, weights, biases, activation_func):
     return interpolations, output
 
 
-def layer_forward(data, interpolations, weights, biases, activation_func):
-    data = affine_transform(data, weights, biases, interpolations, 3)
+def layer_forward(vector, interpolations, weights, intercepts, nonlinear_func):
+    vector = affine_transform(vector, weights, intercepts, interpolations)
     # data = bias_transform(data, biases, interpolations)
-    data = nonlinear_transform(data, activation_func, interpolations, 3)
-    return data
+    vector = nonlinear_transform(vector, nonlinear_func, interpolations)
+    return vector
 
 
-def layer_forward2(data, interpolations, weights, biases):
-    data = affine_transform(data, weights, biases, interpolations, 3)
+def layer_forward2(vector, interpolations, weights, intercepts):
+    vector = affine_transform(vector, weights, intercepts, interpolations, 3)
     # data = bias_transform(data, biases, interpolations)
-    # data = nonlinear_transform(data, activation_func, interpolations, 3)
-    return data
+    # data = nonlinear_transform(data, nonlinear_func, interpolations, 3)
+    return vector
 
 
 def interpolate(start_point, target_point, num_frames=10):
@@ -67,26 +76,26 @@ def equalize_dimensions(point1, point2):
     return point1, point2
 
 
-def affine_transform(data, weights, biases, interpolations, num_frames=10):
-    transform = data.dot(weights) + biases
-    _, transform = equalize_dimensions(data, transform)
-    interp = interpolate(data, transform, num_frames)
+def affine_transform(vector, weights, intercepts, interpolations, num_frames=10):
+    transform = vector.dot(weights) + intercepts
+    _, transform = equalize_dimensions(vector, transform)
+    interp = interpolate(vector, transform, num_frames)
     interpolations.append(interp)
     return transform
 
 
-def bias_transform(data, bias, interpolations, num_frames=10):
-    data, bias = equalize_dimensions(data, bias)
-    transform = data + bias
-    interp = interpolate(data, transform, num_frames)
+def intercepts_translation(vector, intercepts, interpolations, num_frames=10):
+    vector, intercepts = equalize_dimensions(vector, intercepts)
+    transform = vector + intercepts
+    interp = interpolate(vector, transform, num_frames)
     interpolations.append(interp)
     return transform
 
 
-def nonlinear_transform(data, func, interpolations, num_frames=10):
-    transform = func(data)
-    _, transform = equalize_dimensions(data, transform)
-    interp = interpolate(data, transform, num_frames)
+def nonlinear_transform(vector, func, interpolations, num_frames=10):
+    transform = func(vector)
+    _, transform = equalize_dimensions(vector, transform)
+    interp = interpolate(vector, transform, num_frames)
     interpolations.append(interp)
     return transform
 
@@ -99,11 +108,11 @@ def flatten_interpolations(interpolations):
     return np.array(points)
 
 
-def apply_transformations(data, weights, biases, activation_func):
+def apply_transformations(data, weights, intercepts, nonlinear_func):
     interpolations = []
     for point in data:
         vector = np.array(point).reshape(1, -1)
-        point_interpolations, _ = forward(vector, weights, biases, activation_func)
+        point_interpolations, _ = forward(vector, weights, intercepts, nonlinear_func)
         flattened = flatten_interpolations(point_interpolations)
         interpolations.append(flattened)
     return np.stack(interpolations, axis=1)
@@ -125,13 +134,13 @@ def animate_scatter_points(iteration, points, scatters):
     return scatters
 
 
-def main():
-    data, labels = get_xor_data(200)
-    weights, biases = train(data, labels)
+def animate_transformations():
+    data, labels = get_xor_data(300)
+    weights, intercepts = train(data, labels)
 
-    print(weights[-1], biases[-1])
+    print(weights[-1], intercepts[-1])
 
-    point_transformations = apply_transformations(data, weights, biases, np.tanh)
+    point_transformations = apply_transformations(data, weights, intercepts, np.tanh)
 
     fig = plt.figure()
     ax = p3.Axes3D(fig)
@@ -173,18 +182,17 @@ def main():
     plt.show()
 
 
-def main2():
-    data, labels = get_circle_data(200)
-    weights, biases = train(data, labels)
+def plot_decision_boundary():
+    data, labels = get_circle_data(300)
+    weights, intercepts = train(data, labels)
 
-
-    print(weights[-1], biases[-1])
+    print(weights[-1], intercepts[-1])
     # equation of a plane is ax + by + cz + d = 0
     # the x and y values are known because they are given by the meshgrid
     # we can solve for z: z = (-d - ax - by) / c
     xx, yy = np.meshgrid(np.linspace(-3, 3, 10), np.linspace(-3, 3, 10))
     z = (
-        lambda x, y: (-biases[-1][0] - (weights[-1][0] * x) - (weights[-1][1] * y))
+        lambda x, y: (-intercepts[-1][0] - (weights[-1][0] * x) - (weights[-1][1] * y))
         * 1.0
         / weights[-1][2]
     )
@@ -196,7 +204,7 @@ def main2():
     scatter_points = []
 
     for vector, label in zip(vectorized_data, labels):
-        _, output = forward(vector, weights, biases, np.tanh)
+        _, output = forward(vector, weights, intercepts, np.tanh)
         scatter_points.append(
             ax.scatter(
                 output[0][0:1], output[0][1:2], output[0][2:], c=get_color(label)
@@ -213,5 +221,8 @@ if __name__ == "__main__":
     # download mp4 with high framewrate
     # labels for what transformation is currently being animated
     # show decision boundary transforming back to original input space
-    # main()
-    main2()
+    # refactor the layer_forward methods to only return the transformed vectors
+    # calculate interpolations between transformed vectors as a separate method
+
+    animate_transformations()
+    # plot_decision_boundary()
