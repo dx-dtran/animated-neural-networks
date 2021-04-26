@@ -36,7 +36,7 @@ def train_xor_data():
 def train(data, labels):
     classifier = MLPClassifier(
         activation="tanh",
-        hidden_layer_sizes=(3, 3, 3, 3, 3),
+        hidden_layer_sizes=(3, 3, 3),
         verbose=True,
         max_iter=2000,
     )

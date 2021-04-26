@@ -104,6 +104,18 @@ def read_2d_data(filename):
     return data, labels
 
 
+def read_2d_data_in_3d(filename):
+    with open(filename) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=",")
+        data = []
+        labels = []
+        for row in csv_reader:
+            x, y, label = row
+            data.append((float(x), float(y), 0.0))
+            labels.append(float(label))
+    return data, labels
+
+
 def plot(data):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
