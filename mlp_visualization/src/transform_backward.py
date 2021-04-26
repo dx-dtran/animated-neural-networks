@@ -37,7 +37,7 @@ def nonlinear_transform_inverse(vector, inverse_nonlinear_func):
 
 
 def main():
-    data, labels = read_2d_data_in_3d("xor_data.csv")
+    data, labels = read_2d_data_in_3d("../data/xor_data.csv")
     weights, intercepts = train(data, labels)
 
     transformed_output = apply_transformations_on_dataset(

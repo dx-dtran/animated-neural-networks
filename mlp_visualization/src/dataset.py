@@ -133,7 +133,7 @@ def plot(data):
 
 def main():
     xor_data = get_xor_data(200)
-    write_data("xor_data.csv", xor_data)
+    write_data("../data/xor_data.csv", xor_data)
 
 
 if __name__ == "__main__":

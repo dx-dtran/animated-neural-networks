@@ -4,7 +4,7 @@ import numpy as np
 
 
 def train_xor_data():
-    X, labels = read_2d_data("xor_data.csv")
+    X, labels = read_2d_data("../data/xor_data.csv")
     classifier = MLPClassifier(
         activation="tanh",
         hidden_layer_sizes=(3, 3, 3),
