@@ -1,50 +1,53 @@
 import numpy as np
 
-from dataset import get_circle_data, get_xor_data, read_2d_data_in_3d
+from dataset import read_2d_data_in_3d
 from model import train
-from transform import apply_transformations_on_dataset
+from transform_forward import apply_transformations_on_dataset
+from transformations import affine_transform_inverse, nonlinear_transform_inverse
+from interpolate import interpolate_points, stack_interpolations
 
 
-def apply_inverse_transformations_on_dataset(
+def transform_inverse_on_dataset(
     data, weights, intercepts, inverse_nonlinear_func
 ):
     transformations = []
-    # vectorized_data = [np.array(point).reshape(1, -1) for point in data]
-    for vector in data:
-        inv = inverse(vector, weights, intercepts, inverse_nonlinear_func)
+    interpolations = []
+    for point in data:
+        inv, intermediate_points = transform_inverse(
+            point, weights, intercepts, inverse_nonlinear_func
+        )
+        interps = interpolate_points(intermediate_points)
+        interpolations.append(interps)
         transformations.append(inv)
-    return transformations
+    return transformations, stack_interpolations(interpolations)
 
 
-def inverse(vector, weights, intercepts, inverse_nonlinear_func):
-    transform = vector
+def transform_inverse(point, weights, intercepts, inverse_nonlinear_func):
+    intermediate_points = [point]
+    transformed_point = point
     for i, _ in reversed(list(enumerate(weights[:-1]))):
         w = weights[i]
         b = intercepts[i]
-        transform = nonlinear_transform_inverse(transform, inverse_nonlinear_func)
-        transform = affine_transform_inverse(transform, w, b)
-    return transform
 
+        transformed_point = nonlinear_transform_inverse(
+            transformed_point, inverse_nonlinear_func
+        )
+        intermediate_points.append(transformed_point)
 
-def affine_transform_inverse(vector, weights, intercepts):
-    inverse_weights = np.linalg.inv(weights)
-    transform = (vector - intercepts).dot(inverse_weights)
-    return transform
-
-
-def nonlinear_transform_inverse(vector, inverse_nonlinear_func):
-    return inverse_nonlinear_func(vector)
+        transformed_point = affine_transform_inverse(transformed_point, w, b)
+        intermediate_points.append(transformed_point)
+    return transformed_point, intermediate_points
 
 
 def main():
     data, labels = read_2d_data_in_3d("../data/xor_data.csv")
     weights, intercepts = train(data, labels)
 
-    transformed_output = apply_transformations_on_dataset(
+    transformed_output, _ = apply_transformations_on_dataset(
         data, weights, intercepts, np.tanh
     )
     print(transformed_output)
-    inv_transformations = apply_inverse_transformations_on_dataset(
+    inv_transformations, _ = transform_inverse_on_dataset(
         transformed_output, weights, intercepts, np.arctanh
     )
     print(inv_transformations)

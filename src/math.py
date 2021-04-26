@@ -53,6 +53,7 @@ def forward(x, weights, biases):
 
     return np.tanh(hidden.dot(weights[-1]) + biases[-1])
 
+
 if __name__ == "__main__":
     w = [
         np.array(
