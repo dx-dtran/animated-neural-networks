@@ -1,6 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
+from matplotlib import pyplot as plt, animation as animation
+from mpl_toolkits.mplot3d import axes3d as p3
+
+from dataset import get_xor_data, get_circle_data
+from model import train
+from transform_forward import transform_forward_on_dataset
+from math_utils import get_3d_domain
 
 
 def identity(x):
@@ -50,8 +57,15 @@ def apply_weights(x, y, weights):
 
 
 def plot_lines():
-    x = np.linspace(-10, 10, 1000)
     y = lambda i: -5.75 * i - 0.022
+
+    xes = []
+    for i in np.linspace(-1, 1, 100):
+        if -1 < y(i) < 1:
+            xes.append(i)
+    min_x, max_x = min(xes), max(xes)
+
+    x = np.linspace(min_x, max_x, 1000)
 
     x1, y1 = apply_arctanh(x, y(x))
     x2, y2 = apply_biases(x1, y1, np.array([0.059, 0.049]))
@@ -63,12 +77,13 @@ def plot_lines():
     x8, y8 = apply_biases(x7, y7, np.array([-0.193, -1.778]))
     x9, y9 = apply_weights(x8, y8, np.array([[-0.250, 1.500], [-0.248, -0.303]]))
 
-    # plt.plot(x1, y1, "-.g", label="arctanh 1")
-    # plt.plot(x2, y2, "-.b", label="bias 1")
-    # plt.plot(x3, y3, "-.r", label="transform 1")
-    plt.plot(x4, y4, "-.g", label="arctanh 2")
-    plt.plot(x5, y5, "-.b", label="bias 2")
-    plt.plot(x6, y6, "-.r", label="transform 2")
+    plt.plot(x, y(x))
+    plt.plot(x1, y1, "-.g", label="arctanh 1")
+    plt.plot(x2, y2, "-.b", label="bias 1")
+    plt.plot(x3, y3, "-.r", label="transform 1")
+    # plt.plot(x4, y4, "-.g", label="arctanh 2")
+    # plt.plot(x5, y5, "-.b", label="bias 2")
+    # plt.plot(x6, y6, "-.r", label="transform 2")
     # plt.plot(x7, y7, "-.g", label="arctanh 3")
     # plt.plot(x8, y8, "-.b", label="bias 3")
     # plt.plot(x9, y9, "-.r", label="transform 3")
@@ -97,5 +112,160 @@ def plot_lines():
     plt.show()
 
 
+def animate_scatter_points(iteration, points, scatters):
+    for i in range(points[0].shape[0]):
+        scatters[i]._offsets3d = (
+            points[iteration][i, 0:1],
+            points[iteration][i, 1:2],
+            points[iteration][i, 2:],
+        )
+    return scatters
+
+
+def get_color(label):
+    if label < 0:
+        return "blue"
+    return "orange"
+
+
+def animate_transformations():
+    data, labels = get_xor_data(300)
+    weights, intercepts = train(data, labels)
+
+    print(weights[-1], intercepts[-1])
+
+    _, point_interpolations = transform_forward_on_dataset(
+        data, weights, intercepts, np.tanh
+    )
+
+    fig = plt.figure()
+    ax = p3.Axes3D(fig)
+
+    ax.set_xlim3d([-6, 6])
+    ax.set_xlabel("X")
+
+    ax.set_ylim3d([-6, 6])
+    ax.set_ylabel("Y")
+
+    ax.set_zlim3d([-6, 6])
+    ax.set_zlabel("Z")
+
+    ax.set_title("3D Transformation")
+
+    scatter_points = [
+        ax.scatter(
+            point_interpolations[0][i, 0:1],
+            point_interpolations[0][i, 1:2],
+            point_interpolations[0][i, 2:],
+            c=get_color(label),
+        )
+        for i, label in zip(range(point_interpolations[0].shape[0]), labels)
+    ]
+
+    iterations = len(point_interpolations)
+
+    ani = animation.FuncAnimation(
+        fig,
+        animate_scatter_points,
+        iterations,
+        fargs=(point_interpolations, scatter_points),
+        interval=1,
+        blit=False,
+    )
+
+    ani
+
+    plt.show()
+
+
+def plot_decision_boundary():
+    data, labels = get_circle_data(300)
+    weights, intercepts = train(data, labels)
+
+    # equation of a plane is ax + by + cz + d = 0
+    # the x and y values are known because they are given by the meshgrid
+    # we can solve for z: z = (-d - ax - by) / c
+    xx, yy = np.meshgrid(np.linspace(-3, 3, 10), np.linspace(-3, 3, 10))
+    z = (
+        lambda x, y: (-intercepts[-1][0] - (weights[-1][0] * x) - (weights[-1][1] * y))
+        * 1.0
+        / weights[-1][2]
+    )
+
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+
+    transformed_points, _ = transform_forward_on_dataset(
+        data, weights, intercepts, np.tanh
+    )
+    scatter_points = [
+        ax.scatter(output[0][0:1], output[0][1:2], output[0][2:], c=get_color(label))
+        for output, label in zip(transformed_points, labels)
+    ]
+
+    ax.plot_surface(xx, yy, z(xx, yy), alpha=0.8)
+    plt.show()
+
+
+def plot_decision_boundary_as_points():
+    data, labels = get_circle_data(300)
+    weights, intercepts = train(data, labels)
+
+    print(weights[-1], intercepts[-1])
+    # equation of a plane is ax + by + cz + d = 0
+    # the x and y values are known because they are given by the meshgrid
+    # we can solve for z: z = (-d - ax - by) / c
+
+    z = (
+        lambda x, y: (-intercepts[-1][0] - (weights[-1][0] * x) - (weights[-1][1] * y))
+        * 1.0
+        / weights[-1][2]
+    )
+
+    fig = plt.figure()
+    ax = fig.gca(projection="3d")
+
+    transformed_points, _ = transform_forward_on_dataset(
+        data, weights, intercepts, np.tanh
+    )
+    scatter_points = [
+        ax.scatter(output[0][0:1], output[0][1:2], output[0][2:], c=get_color(label))
+        for output, label in zip(transformed_points, labels)
+    ]
+    transformed_points = np.vstack(transformed_points)
+    # min_x, min_y, min_z = np.min(transformed_points, axis=0)
+    # max_x, max_y, max_z = np.max(transformed_points, axis=0)
+
+    x_range, y_range = np.linspace(-1, 1, 100), np.linspace(-1, 1, 100)
+    x_min, x_max, y_min, y_max = get_3d_domain(x_range, y_range, -1, 1, z)
+    # xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
+    xx, yy = np.meshgrid(np.linspace(-1, 1, 100), np.linspace(-1, 1, 100))
+
+    ax.plot_surface(xx, yy, z(xx, yy), alpha=0.8)
+
+    x = np.linspace(-1, 1, 10)
+    y = np.linspace(-1, 1, 10)
+    z_vals = z(x, y)
+    print(z_vals)
+
+    xx, yy = np.meshgrid(x, y)
+    z_vals = z(xx, yy)
+
+    for x_val, _ in enumerate(xx):
+        for y_val, _ in enumerate(yy):
+            z_val = z_vals[x_val][y_val]
+            ax.scatter(xx[x_val, y_val], yy[x_val, y_val], z_val, c="black")
+
+    plt.show()
+
+
 if __name__ == "__main__":
-    plot_lines()
+    # todo: get this to work with 2 dim hidden layers
+    # command line options for activation func
+    # download mp4 with high framerate
+    # labels for what transformation is currently being animated
+    # show decision boundary transforming back to original input space
+
+    # plot_lines()
+    # animate_transformations()
+    plot_decision_boundary()

@@ -54,6 +54,20 @@ def forward(x, weights, biases):
     return np.tanh(hidden.dot(weights[-1]) + biases[-1])
 
 
+# def
+
+
+def get_3d_domain(x_range, y_range, range_min, range_max, func):
+    x_vals = []
+    y_vals = []
+    for x in x_range:
+        for y in y_range:
+            if range_min < func(x, y) < range_max:
+                x_vals.append(x)
+                y_vals.append(y)
+    return min(x_vals), max(x_vals), min(y_vals), max(y_vals)
+
+
 if __name__ == "__main__":
     w = [
         np.array(
