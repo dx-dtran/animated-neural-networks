@@ -27,7 +27,7 @@ def get_xor_data(num_samples: int, noise=0):
 
         label = get_xor_label(Point(x + noise_x, y + noise_y))
 
-        data.append((x, y))
+        data.append((x, y, 0.0))
         labels.append(label)
 
     return data, labels
@@ -49,7 +49,7 @@ def get_circle_data(num_samples: int, noise=0):
         noise_x = np.random.uniform(-radius, radius) * noise
         noise_y = np.random.uniform(-radius, radius) * noise
         label = get_circle_label(Point(x + noise_x, y + noise_y), Point(0, 0))
-        data.append((x, y))
+        data.append((x, y, 0.0))
         labels.append(label)
 
     for i in range(num_samples // 2):
@@ -60,7 +60,7 @@ def get_circle_data(num_samples: int, noise=0):
         noise_x = np.random.uniform(-radius, radius) * noise
         noise_y = np.random.uniform(-radius, radius) * noise
         label = get_circle_label(Point(x + noise_x, y + noise_y), Point(0, 0))
-        data.append((x, y))
+        data.append((x, y, 0.0))
         labels.append(label)
 
     return data, labels

@@ -25,12 +25,12 @@ def convert_1d_to_2d(array):
     return array
 
 
-def interpolate_points(points):
+def interpolate_points(points, num_frames=10):
     interpolations = []
     for i in range(1, len(points)):
         start = points[i - 1]
         target = points[i]
-        interp = interpolate(start, target)
+        interp = interpolate(start, target, num_frames)
         interpolations.append(interp)
     return flatten_interpolations(interpolations)
 

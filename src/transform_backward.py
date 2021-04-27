@@ -8,7 +8,7 @@ from interpolate import interpolate_points, stack_interpolations
 
 
 def transform_inverse_on_dataset(
-    data, weights, intercepts, inverse_nonlinear_func
+    data, weights, intercepts, inverse_nonlinear_func, num_frames=10
 ):
     transformations = []
     interpolations = []
@@ -16,7 +16,7 @@ def transform_inverse_on_dataset(
         inv, intermediate_points = transform_inverse(
             point, weights, intercepts, inverse_nonlinear_func
         )
-        interps = interpolate_points(intermediate_points)
+        interps = interpolate_points(intermediate_points, num_frames)
         interpolations.append(interps)
         transformations.append(inv)
     return transformations, stack_interpolations(interpolations)
