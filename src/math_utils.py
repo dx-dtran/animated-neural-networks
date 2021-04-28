@@ -2,56 +2,56 @@ import numpy as np
 from scipy.stats import logistic
 
 
-def multiply(weights, biases):
+def multiply(weights, intercepts):
     print(
         forward(
             np.array([5.061012059504988, 0.8093913561939445]).reshape(1, -1),
             weights,
-            biases,
+            intercepts,
         )
     )
     print(
         forward(
             np.array([-4.687975658113184, 3.326457840916059]).reshape(1, -1),
             weights,
-            biases,
+            intercepts,
         )
     )
     print(
         forward(
             np.array([3.074848269639795, 1.7081594099083992]).reshape(1, -1),
             weights,
-            biases,
+            intercepts,
         )
     )
     print(
         forward(
             np.array([-2.7194606428352595, -2.8958698109676946]).reshape(1, -1),
             weights,
-            biases,
+            intercepts,
         )
     )
     print(
         forward(
             np.array([3.360942495673471, -5.22121486229057]).reshape(1, -1),
             weights,
-            biases,
+            intercepts,
         )
     )
 
 
-def forward(x, weights, biases):
+def forward(x, weights, intercepts):
     hidden = x
-    # for w, b in zip(weights, biases):
+    # for w, b in zip(weights, intercepts):
     for i in range(len(weights) - 1):
         w = weights[i]
-        b = biases[i]
+        b = intercepts[i]
         # print(hidden.dot(w))
         hidden = hidden.dot(w) + b
         hidden = np.tanh(hidden)
-    # return logistic.cdf(hidden.dot(weights[-1]) + biases[-1])
+    # return logistic.cdf(hidden.dot(weights[-1]) + intercepts[-1])
 
-    return np.tanh(hidden.dot(weights[-1]) + biases[-1])
+    return np.tanh(hidden.dot(weights[-1]) + intercepts[-1])
 
 
 if __name__ == "__main__":

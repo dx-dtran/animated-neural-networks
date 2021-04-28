@@ -5,16 +5,16 @@ from mpl_toolkits.mplot3d import axes3d as p3
 from dataset import get_xor_data, get_circle_data
 from model import train
 from transform_forward import transform_forward_on_dataset
-from transform_backward import transform_inverse_on_dataset
+from transform_inverse import transform_inverse_on_dataset
 
 
 def identity(x):
     return x
 
 
-def get_plane(x, y, weights, biases, func=identity):
+def get_plane(x, y, weights, intercepts, func=identity):
     return (
-        (-biases[0] - (weights[0] * func(x)) - (weights[1] * func(y)))
+        (-intercepts[0] - (weights[0] * func(x)) - (weights[1] * func(y)))
         * 1.0
         / weights[2]
     )
@@ -22,14 +22,14 @@ def get_plane(x, y, weights, biases, func=identity):
 
 def plot_plane():
     weights = np.array([[-1.51774293], [1.76071715], [0.99202684]])
-    biases = [-0.18383826]
+    intercepts = [-0.18383826]
 
     fig = plt.figure()
     ax = fig.gca(projection="3d")
     xx, yy = np.meshgrid(np.linspace(-0.99, 0.99, 100), np.linspace(-0.99, 0.99, 100))
     z = (
         lambda x, y: (
-            -biases[0] - (weights[0] * np.arctanh(x)) - (weights[1] * np.arctanh(y))
+            -intercepts[0] - (weights[0] * np.arctanh(x)) - (weights[1] * np.arctanh(y))
         )
         * 1.0
         / weights[2]
@@ -44,8 +44,8 @@ def apply_arctanh(x, y):
     return np.arctanh(x), np.arctanh(y)
 
 
-def apply_biases(x, y, biases):
-    return x + biases[0], y + biases[1]
+def apply_intercepts(x, y, intercepts):
+    return x + intercepts[0], y + intercepts[1]
 
 
 def apply_weights(x, y, weights):
@@ -65,24 +65,24 @@ def plot_inverse_transforms_on_line():
     x = np.linspace(min_x, max_x, 1000)
 
     x1, y1 = apply_arctanh(x, y(x))
-    x2, y2 = apply_biases(x1, y1, np.array([0.059, 0.049]))
+    x2, y2 = apply_intercepts(x1, y1, np.array([0.059, 0.049]))
     x3, y3 = apply_weights(x2, y2, np.array([[0.393, -0.110], [-0.833, 0.974]]))
     x4, y4 = apply_arctanh(x3, y3)
-    x5, y5 = apply_biases(x4, y4, np.array([-0.014, -0.025]))
+    x5, y5 = apply_intercepts(x4, y4, np.array([-0.014, -0.025]))
     x6, y6 = apply_weights(x5, y5, np.array([[-2.156, -4.035], [2.672, 4.286]]))
     x7, y7 = apply_arctanh(x6, y6)
-    x8, y8 = apply_biases(x7, y7, np.array([-0.193, -1.778]))
+    x8, y8 = apply_intercepts(x7, y7, np.array([-0.193, -1.778]))
     x9, y9 = apply_weights(x8, y8, np.array([[-0.250, 1.500], [-0.248, -0.303]]))
 
     plt.plot(x, y(x))
     plt.plot(x1, y1, "-.g", label="arctanh 1")
-    plt.plot(x2, y2, "-.b", label="bias 1")
+    plt.plot(x2, y2, "-.b", label="intercepts 1")
     plt.plot(x3, y3, "-.r", label="transform 1")
     # plt.plot(x4, y4, "-.g", label="arctanh 2")
-    # plt.plot(x5, y5, "-.b", label="bias 2")
+    # plt.plot(x5, y5, "-.b", label="intercepts 2")
     # plt.plot(x6, y6, "-.r", label="transform 2")
     # plt.plot(x7, y7, "-.g", label="arctanh 3")
-    # plt.plot(x8, y8, "-.b", label="bias 3")
+    # plt.plot(x8, y8, "-.b", label="intercepts 3")
     # plt.plot(x9, y9, "-.r", label="transform 3")
 
     # plt.plot(np.arctanh(x), np.arctanh(-5.75 * x - 0.022), "-.r")
@@ -91,7 +91,7 @@ def plot_inverse_transforms_on_line():
     #     np.arctanh(x) + 0.059,
     #     np.arctanh(-5.75 * x - 0.022) + 0.049,
     #     "-.b",
-    #     label="bias 1",
+    #     label="intercepts 1",
     # )
     # plt.plot(
     #     0.393 * (np.arctanh(x) + 0.059)
@@ -125,7 +125,7 @@ def get_color(label):
     return "orange"
 
 
-def animate_transform_forward():
+def animate_transform_forward(data, labels):
     fig = plt.figure()
     ax = p3.Axes3D(fig)
 
@@ -140,7 +140,6 @@ def animate_transform_forward():
 
     ax.set_title("3D Transformation")
 
-    data, labels = get_xor_data(300)
     weights, intercepts = train(data, labels)
 
     _, point_interpolations = transform_forward_on_dataset(
@@ -173,7 +172,7 @@ def animate_transform_forward():
     plt.show()
 
 
-def animate_forward_and_backward():
+def animate_transform_then_inverse(data, labels):
     fig = plt.figure()
     ax = p3.Axes3D(fig)
 
@@ -188,7 +187,6 @@ def animate_forward_and_backward():
 
     ax.set_title("3D Transformation")
 
-    data, labels = get_xor_data(300)
     weights, intercepts = train(data, labels)
 
     transformed_points, forward_point_interpolations = transform_forward_on_dataset(
@@ -229,8 +227,7 @@ def animate_forward_and_backward():
     plt.show()
 
 
-def plot_decision_boundary():
-    data, labels = get_circle_data(300)
+def plot_decision_surface(data, labels):
     weights, intercepts = train(data, labels)
 
     # equation of a plane is ax + by + cz + d = 0
@@ -246,6 +243,10 @@ def plot_decision_boundary():
     fig = plt.figure()
     ax = fig.gca(projection="3d")
 
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
     transformed_points, _ = transform_forward_on_dataset(
         data, weights, intercepts, np.tanh
     )
@@ -260,8 +261,54 @@ def plot_decision_boundary():
     plt.show()
 
 
-def animate_decision_boundary_inverse_transforms():
-    data, labels = get_xor_data(300)
+def plot_decision_surface_points(data, labels):
+    weights, intercepts = train(data, labels)
+
+    z = (
+        lambda x, y: (-intercepts[-1][0] - (weights[-1][0] * x) - (weights[-1][1] * y))
+        * 1.0
+        / weights[-1][2]
+    )
+
+    fig = plt.figure()
+    ax = p3.Axes3D(fig)
+
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    ax.set_title("3D Transformation")
+
+    transformed_points, _ = transform_forward_on_dataset(
+        data, weights, intercepts, np.tanh
+    )
+    scatter_points = [
+        ax.scatter(output[0][0:1], output[0][1:2], output[0][2:], c=get_color(label))
+        for output, label in zip(transformed_points, labels)
+    ]
+
+    x = np.linspace(-0.99, 0.99, 20)
+    y = np.linspace(-0.99, 0.99, 20)
+
+    xx, yy = np.meshgrid(x, y)
+    z_vals = z(xx, yy)
+
+    decision_surface_points = []
+    for x_ind, _ in enumerate(xx):
+        for y_ind, _ in enumerate(yy):
+            z_val = z_vals[x_ind][y_ind]
+            if -1 < z_val < 1:
+                scatter_points.append(
+                    ax.scatter(xx[x_ind, y_ind], yy[x_ind, y_ind], z_val, c="black")
+                )
+                decision_surface_points.append(
+                    np.array([[xx[x_ind, y_ind], yy[x_ind, y_ind], z_val]])
+                )
+
+    plt.show()
+
+
+def animate_decision_surface_inverse_transforms(data, labels):
     weights, intercepts = train(data, labels)
 
     z = (
@@ -298,7 +345,7 @@ def animate_decision_boundary_inverse_transforms():
     xx, yy = np.meshgrid(x, y)
     z_vals = z(xx, yy)
 
-    boundary_points = []
+    decision_surface_points = []
     for x_ind, _ in enumerate(xx):
         for y_ind, _ in enumerate(yy):
             z_val = z_vals[x_ind][y_ind]
@@ -306,13 +353,13 @@ def animate_decision_boundary_inverse_transforms():
                 scatter_points.append(
                     ax.scatter(xx[x_ind, y_ind], yy[x_ind, y_ind], z_val, c="black")
                 )
-                boundary_points.append(
+                decision_surface_points.append(
                     np.array([[xx[x_ind, y_ind], yy[x_ind, y_ind], z_val]])
                 )
 
-    all_points = transformed_points + boundary_points
+    all_points = transformed_points + decision_surface_points
     # all_points = transformed_points
-    # all_points = boundary_points
+    # all_points = decision_surface_points
 
     _, point_interpolations = transform_inverse_on_dataset(
         all_points, weights, intercepts, np.arctanh, num_frames=3
@@ -335,14 +382,20 @@ def animate_decision_boundary_inverse_transforms():
 
 
 if __name__ == "__main__":
-    # todo: get this to work with 2 dim hidden layers
-    # command line options for activation func
-    # download mp4 with high framerate
-    # labels for what transformation is currently being animated
-    # show decision boundary transforming back to original input space
+    # TODO
+    # command line options to choose nonlinear func, model hyperparameters
+    # allow varying affine transform matrix sizes, i.e. 2x2 then 3x3
+    # download animation mp4 at high framerate
+    # plot labelling for transformation animation
+    # show decision boundary plane transforming back to original input space
+
+    # data, labels = get_xor_data(300)
+    data, labels = get_circle_data(300)
 
     # plot_inverse_transforms_on_line()
-    # animate_transform_forward()
-    # animate_forward_and_backward()
-    plot_decision_boundary()
-    # animate_decision_boundary_inverse_transforms()
+    # animate_transform_forward(data, labels)
+    # plot_decision_surface(data, labels)
+
+    # animate_transform_then_inverse(data, labels)
+    # plot_decision_surface_points(data, labels)
+    animate_decision_surface_inverse_transforms(data, labels)
