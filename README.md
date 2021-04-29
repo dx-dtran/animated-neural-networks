@@ -1,9 +1,9 @@
 # Animated Neural Networks
 
-Visualize the linear and non-linear transformations of a neural network geometrically in 3D
+Visualize how neural networks transform Euclidean space to make complex 3D data linearly separable
 
-![](./docs/circle_data.gif)
+![](./images/circle_data.gif)
 
-![](./docs/xor_data.gif)
+![](./images/xor_data.gif)
 
-![](./docs/decision_surface.png)
+![](./images/decision_surface.png)
