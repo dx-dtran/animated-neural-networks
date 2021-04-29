@@ -394,8 +394,8 @@ if __name__ == "__main__":
 
     # plot_inverse_transforms_on_line()
     # animate_transform_forward(data, labels)
-    # plot_decision_surface(data, labels)
+    plot_decision_surface(data, labels)
 
     # animate_transform_then_inverse(data, labels)
     # plot_decision_surface_points(data, labels)
-    animate_decision_surface_inverse_transforms(data, labels)
+    # animate_decision_surface_inverse_transforms(data, labels)
