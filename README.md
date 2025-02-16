@@ -6,7 +6,7 @@ Visualize how neural networks transform Euclidean space to make complex 3D data 
 
 ![](./images/xor_data.gif)
 
-![](./images/nn_transform.gif)
+![](./images/decision_surface.png)
 
 This repository provides a visual exploration of neural networks transforming data in Euclidean space, illustrating complex decision boundaries. It includes scripts for generating datasets, training a neural network model, and visualizing transformations. The visualization aids in understanding how neural networks learn and make predictions.
 
