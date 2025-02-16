@@ -8,7 +8,7 @@ Visualize how neural networks transform Euclidean space to make complex 3D data 
 
 ![](./images/decision_surface.png)
 
-This repository provides a visual exploration of neural networks transforming data in Euclidean space, illustrating complex decision boundaries. It includes scripts for generating datasets, training a neural network model, and visualizing transformations. The visualization aids in understanding how neural networks learn and make predictions.
+This repository provides an insightful exploration of how neural networks transform Euclidean space to create complex, linearly separable decision boundaries. It includes scripts for generating datasets, training a neural network, and visualizing transformations, offering a deeper understanding of neural network behavior.
 
 ## Detailed Summary of the Codebase
 
@@ -24,7 +24,7 @@ This repository comprises a suite of Python scripts designed to visualize how ne
 - **transform_inverse.py**: Manages inverse transformations, illustrating how transformed data can be mapped back to the original input space.
 - **transformations.py**: Provides various transformation functions, including affine and nonlinear transformations, which are essential for understanding the neural network's behavior.
 
-These scripts collectively demonstrate the complex process of how neural networks learn to separate data in high-dimensional space, making the decision boundaries and transformations visually accessible.![](./images/decision_surface.png)
+These scripts collectively demonstrate the complex process of how neural networks learn to separate data in high-dimensional space, making the decision boundaries and transformations visually accessible.
 
 ## Code Files Description
 
